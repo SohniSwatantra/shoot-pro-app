@@ -1,0 +1,20 @@
+INFO:     172.31.196.53:59722 - "GET /payment HTTP/1.1" 200 OK
+2024-09-09 20:49:53,968 - DEBUG - load_ssl_context verify='/home/runner/ShootProApp/.pythonlibs/lib/python3.11/site-packages/stripe/data/ca-certificates.crt' cert=None trust_env=True http2=False
+2024-09-09 20:49:53,969 - DEBUG - load_verify_locations cafile='/home/runner/ShootProApp/.pythonlibs/lib/python3.11/site-packages/stripe/data/ca-certificates.crt'
+2024-09-09 20:49:53,998 - INFO - message='Request to Stripe api' method=post url=https://api.stripe.com/v1/checkout/sessions
+2024-09-09 20:49:53,998 - DEBUG - api_version=2024-06-20 message='Post details' post_data=line_items[0][price]=price_1NnBTaFZx9GKXwMK0YBhjUZs&line_items[0][quantity]=1&mode=subscription&success_url=http%3A%2F%2Flocalhost%3A8000%2Fapp&cancel_url=http%3A%2F%2Flocalhost%3A8000%2Fpayment
+2024-09-09 20:49:54,000 - DEBUG - Starting new HTTPS connection (1): api.stripe.com:443
+2024-09-09 20:49:54,227 - DEBUG - https://api.stripe.com:443 "POST /v1/checkout/sessions HTTP/11" 400 360
+2024-09-09 20:49:54,228 - INFO - message='Stripe API response' path=https://api.stripe.com/v1/checkout/sessions response_code=400
+2024-09-09 20:49:54,228 - DEBUG - body='{\n  "error": {\n    "code": "resource_missing",\n    "doc_url": "https://stripe.com/docs/error-codes/resource-missing",\n    "message": "No such price: \'price_1NnBTaFZx9GKXwMK0YBhjUZs\'",\n    "param": "line_items[0][price]",\n    "request_log_url": "https://dashboard.stripe.com/test/logs/req_gA5QXoupKzVAdw?t=1725914994",\n    "type": "invalid_request_error"\n  }\n}\n' message='API response body'
+2024-09-09 20:49:54,228 - DEBUG - link=https://dashboard.stripe.com/test/logs/req_gA5QXoupKzVAdw message='Dashboard link for request'
+2024-09-09 20:49:54,228 - INFO - error_code=resource_missing error_message="No such price: 'price_1NnBTaFZx9GKXwMK0YBhjUZs'" error_param=line_items[0][price] error_type=invalid_request_error message='Stripe API error received'
+INFO:     172.31.196.53:59722 - "POST /create-checkout-session HTTP/1.1" 200 OK
+2024-09-09 20:49:55,367 - INFO - message='Request to Stripe api' method=post url=https://api.stripe.com/v1/checkout/sessions
+2024-09-09 20:49:55,367 - DEBUG - api_version=2024-06-20 message='Post details' post_data=line_items[0][price]=price_1NnBUGFZx9GKXwMKMlSBY9YO&line_items[0][quantity]=1&mode=subscription&success_url=http%3A%2F%2Flocalhost%3A8000%2Fapp&cancel_url=http%3A%2F%2Flocalhost%3A8000%2Fpayment
+2024-09-09 20:49:55,507 - DEBUG - https://api.stripe.com:443 "POST /v1/checkout/sessions HTTP/11" 400 360
+2024-09-09 20:49:55,507 - INFO - message='Stripe API response' path=https://api.stripe.com/v1/checkout/sessions response_code=400
+2024-09-09 20:49:55,507 - DEBUG - body='{\n  "error": {\n    "code": "resource_missing",\n    "doc_url": "https://stripe.com/docs/error-codes/resource-missing",\n    "message": "No such price: \'price_1NnBUGFZx9GKXwMKMlSBY9YO\'",\n    "param": "line_items[0][price]",\n    "request_log_url": "https://dashboard.stripe.com/test/logs/req_0Vr5Q89Z27O2D9?t=1725914995",\n    "type": "invalid_request_error"\n  }\n}\n' message='API response body'
+2024-09-09 20:49:55,508 - DEBUG - link=https://dashboard.stripe.com/test/logs/req_0Vr5Q89Z27O2D9 message='Dashboard link for request'
+2024-09-09 20:49:55,508 - INFO - error_code=resource_missing error_message="No such price: 'price_1NnBUGFZx9GKXwMKMlSBY9YO'" error_param=line_items[0][price] error_type=invalid_request_error message='Stripe API error received'
+INFO:     172.31.196.53:59722 - "POST /create-checkout-session HTTP/1.1" 200 OK

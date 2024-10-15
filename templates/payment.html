@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscribe - Shooting Sports Enthusiasts</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/logout">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <h1>Choose Your Subscription</h1>
+        <div class="subscription-options">
+            <div class="subscription-option">
+                <h2>Monthly</h2>
+                <p>€9.99/month</p>
+                <button onclick="checkout('{{ STRIPE_MONTHLY_PRICE_ID }}')">Subscribe</button>
+            </div>
+            <div class="subscription-option">
+                <h2>Yearly</h2>
+                <p>€99/year</p>
+                <button onclick="checkout('{{ STRIPE_YEARLY_PRICE_ID }}')">Subscribe</button>
+            </div>
+        </div>
+        <div id="error-message" style="color: red; margin-top: 20px;"></div>
+    </main>
+    <footer>
+        <p>&copy; 2023 Shooting Sports Enthusiasts. All rights reserved.</p>
+    </footer>
+    <script>
+        const stripe = Stripe('pk_test_51NnBPHFZx9GKXwMKM2qsXw6YGpxFEkY1OLYNBGkbQGMTNw4Gd4yNpDz2Vj6rrzzFQhPwwbBM8uPTfJDIAXRGBRDT00EucLjMCL');
+
+        async function checkout(priceId) {
+            try {
+                const response = await fetch('/create-checkout-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ priceId: priceId }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to create checkout session');
+                }
+
+                const session = await response.json();
+                const result = await stripe.redirectToCheckout({
+                    sessionId: session.id,
+                });
+
+                if (result.error) {
+                    throw new Error(result.error.message);
+                }
+            } catch (error) {
+                displayError(error.message);
+            }
+        }
+
+        function displayError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+        }
+    </script>
+</body>
+</html>
