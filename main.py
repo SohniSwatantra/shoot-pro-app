@@ -81,7 +81,7 @@ async def login(request: Request):
 async def auth(request: Request):
     try:
         token = await oauth.google.authorize_access_token(request)
-        logger.info(f"Token received: {token}")  # Add this line to log the token
+        logger.info(f"Token received: {token}")  # Log the token for debugging
     except Exception as e:
         logger.error(f"Error during OAuth: {str(e)}")
         raise HTTPException(status_code=400, detail="Failed to authenticate")
@@ -89,7 +89,7 @@ async def auth(request: Request):
     user = await oauth.google.parse_id_token(request, token)
     request.session['user'] = dict(user)
     
-    # Check if user exists in database, if not add them
+    # Check if user exists in the database, if not, add them
     with get_db() as conn:
         c = conn.cursor()
         c.execute("SELECT * FROM users WHERE email = ?", (user['email'],))
@@ -98,6 +98,7 @@ async def auth(request: Request):
             c.execute("INSERT INTO users (email, name) VALUES (?, ?)",
                       (user['email'], user['name']))
     
+    # Redirect the user to the payment page
     return RedirectResponse(url='/payment')
 
 @app.get('/logout')
