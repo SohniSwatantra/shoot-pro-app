@@ -81,7 +81,7 @@ async def login(request: Request):
 async def auth(request: Request):
     try:
         token = await oauth.google.authorize_access_token(request)
-         logger.info(f"Token received: {token}")  # Add this line to log the token
+        logger.info(f"Token received: {token}")  # Add this line to log the token
     except Exception as e:
         logger.error(f"Error during OAuth: {str(e)}")
         raise HTTPException(status_code=400, detail="Failed to authenticate")
