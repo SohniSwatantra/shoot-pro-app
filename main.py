@@ -76,35 +76,50 @@ async def signin(request: Request):
 async def login(request: Request):
     redirect_uri = request.url_for('auth')
     return await oauth.google.authorize_redirect(request, redirect_uri)
+import httpx
 
 @app.get('/auth')
 async def auth(request: Request):
     try:
         token = await oauth.google.authorize_access_token(request)
         logger.info(f"Token received: {token}")
-        logger.info(f"Token keys: {list(token.keys())}")
-        
-        if 'id_token' not in token:
-            logger.error("id_token not found in token")
-            raise HTTPException(status_code=400, detail="ID token missing")
-        
-        user = await oauth.google.parse_id_token(request, token)
-        request.session['user'] = dict(user)
-        
-        # Check if user exists in the database, if not, add them
-        with get_db() as conn:
-            c = conn.cursor()
-            c.execute("SELECT * FROM users WHERE email = ?", (user['email'],))
-            existing_user = c.fetchone()
-            if not existing_user:
-                c.execute("INSERT INTO users (email, name) VALUES (?, ?)",
-                          (user['email'], user.get('name', 'Unknown')))
-        
-        # Redirect the user to the payment page
-        return RedirectResponse(url='/payment')
     except Exception as e:
-        logger.error(f"Error during authentication: {str(e)}")
-        raise HTTPException(status_code=400, detail="Authentication failed")
+        logger.error(f"Error during OAuth access token retrieval: {str(e)}")
+        raise HTTPException(status_code=400, detail="Failed to retrieve access token")
+    
+    access_token = token.get('access_token')
+    if not access_token:
+        logger.error("access_token missing in token")
+        raise HTTPException(status_code=400, detail="Access token missing")
+    
+    # Fetch user information from Google
+    async with httpx.AsyncClient() as client:
+        try:
+            user_info_response = await client.get(
+                'https://www.googleapis.com/oauth2/v3/userinfo',
+                headers={'Authorization': f'Bearer {access_token}'}
+            )
+            user_info_response.raise_for_status()
+            user_info = user_info_response.json()
+            logger.info(f"User info received: {user_info}")
+        except httpx.HTTPError as e:
+            logger.error(f"Failed to fetch user info: {str(e)}")
+            raise HTTPException(status_code=400, detail="Failed to fetch user info")
+    
+    request.session['user'] = user_info
+    
+    # Check if user exists in the database, if not, add them
+    with get_db() as conn:
+        c = conn.cursor()
+        c.execute("SELECT * FROM users WHERE email = ?", (user_info.get('email'),))
+        existing_user = c.fetchone()
+        if not existing_user:
+            c.execute("INSERT INTO users (email, name) VALUES (?, ?)",
+                      (user_info.get('email'), user_info.get('name')))
+            conn.commit()
+    
+    # Redirect the user to the payment page
+    return RedirectResponse(url='/payment')
 
 @app.get('/logout')
 async def logout(request: Request):
