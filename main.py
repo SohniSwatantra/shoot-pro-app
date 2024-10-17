@@ -96,8 +96,8 @@ async def auth(request: Request):
     request.session['user'] = dict(user)
     
     # Rest of your code...
-  # Check if user exists in the database, if not, add them
-     with get_db() as conn:
+    # Check if user exists in the database, if not, add them
+    with get_db() as conn:
             c = conn.cursor()
             c.execute("SELECT * FROM users WHERE email = ?", (user['email'],))
             existing_user = c.fetchone()
@@ -105,8 +105,8 @@ async def auth(request: Request):
                 c.execute("INSERT INTO users (email, name) VALUES (?, ?)",
                           (user['email'], user.get('name', 'Unknown')))
         
-        # Redirect the user to the payment page
-        return RedirectResponse(url='/payment')
+    # Redirect the user to the payment page
+    return RedirectResponse(url='/payment')
 
 @app.get('/logout')
 async def logout(request: Request):
