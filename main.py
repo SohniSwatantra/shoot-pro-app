@@ -81,22 +81,23 @@ async def login(request: Request):
 async def auth(request: Request):
     try:
         token = await oauth.google.authorize_access_token(request)
-        logger.info(f"Token received: {token}")  # Log the entire token for debugging
-        
-        if 'id_token' not in token:
-            logger.error("id_token not found in the received token")
-            # Try to use userinfo endpoint as a fallback
-            userinfo = await oauth.google.userinfo(token=token)
-            logger.info(f"Userinfo: {userinfo}")
-            user = dict(userinfo)
-        else:
-            user = await oauth.google.parse_id_token(request, token)
-        
-        logger.info(f"Parsed user info: {user}")
-        request.session['user'] = dict(user)
-        
-        # Check if user exists in the database, if not, add them
-        with get_db() as conn:
+        logger.info(f"Token received: {token}")  # Existing log
+        logger.info(f"Token keys: {list(token.keys())}")  # New log to inspect keys
+    except Exception as e:
+        logger.error(f"Error during OAuth: {str(e)}")
+        raise HTTPException(status_code=400, detail="Failed to authenticate")
+    
+    # Check for 'id_token'
+    if 'id_token' not in token:
+        logger.error("id_token not found in token")
+        raise HTTPException(status_code=400, detail="ID token missing")
+    
+    user = await oauth.google.parse_id_token(request, token)
+    request.session['user'] = dict(user)
+    
+    # Rest of your code...
+  # Check if user exists in the database, if not, add them
+     with get_db() as conn:
             c = conn.cursor()
             c.execute("SELECT * FROM users WHERE email = ?", (user['email'],))
             existing_user = c.fetchone()
@@ -106,9 +107,6 @@ async def auth(request: Request):
         
         # Redirect the user to the payment page
         return RedirectResponse(url='/payment')
-    except Exception as e:
-        logger.error(f"Error during OAuth: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=400, detail=f"Failed to authenticate: {str(e)}")
 
 @app.get('/logout')
 async def logout(request: Request):
