@@ -9,6 +9,7 @@ import stripe
 import sqlite3
 from pydantic import BaseModel
 import logging
+import httpx
 
 app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key="your-secret-key")
@@ -76,7 +77,7 @@ async def signin(request: Request):
 async def login(request: Request):
     redirect_uri = request.url_for('auth')
     return await oauth.google.authorize_redirect(request, redirect_uri)
-import httpx
+
 
 @app.get('/auth')
 async def auth(request: Request):
