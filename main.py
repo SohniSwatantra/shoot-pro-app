@@ -142,12 +142,32 @@ async def payment(request: Request, user: User = Depends(get_current_user)):
     })
 
 @app.post("/create-checkout-session")
-async def create_checkout_session(request: Request, user: User = Depends(get_current_user)):
+async def create_checkout_session(
+    checkout_request: CheckoutSessionRequest,
+    user: User = Depends(get_current_user)
+):
     if not user:
+        logger.warning("Unauthenticated user attempted to create a checkout session.")
         raise HTTPException(status_code=401, detail="User not authenticated")
     
-    data = await request.json()
-    price_id = data.get('priceId')
+    price_id = checkout_request.priceId
+    
+    if not price_id:
+        logger.error("Price ID not provided in the request.")
+        raise HTTPException(status_code=400, detail="Price ID is required.")
+    
+    # Ensure BASE_URL is set
+    base_url = os.getenv('BASE_URL')
+    if not base_url:
+        logger.error("BASE_URL environment variable not set.")
+        raise HTTPException(status_code=500, detail="Server configuration error.")
+    
+    success_url = f"{base_url}/app?session_id={{CHECKOUT_SESSION_ID}}"
+    cancel_url = f"{base_url}/payment"
+    
+    logger.info(f"Creating checkout session for user: {user.email} with price_id: {price_id}")
+    logger.info(f"Success URL: {success_url}")
+    logger.info(f"Cancel URL: {cancel_url}")
     
     try:
         checkout_session = stripe.checkout.Session.create(
@@ -159,12 +179,16 @@ async def create_checkout_session(request: Request, user: User = Depends(get_cur
                 'quantity': 1,
             }],
             mode='subscription',
-            success_url=request.url_for('app_page'),
-            cancel_url=request.url_for('payment'),
+            success_url=success_url,
+            cancel_url=cancel_url,
         )
+        logger.info(f"Checkout session created successfully: {checkout_session.id}")
         return {"id": checkout_session.id}
+    except stripe.error.StripeError as e:
+        logger.error(f"Stripe error creating checkout session: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Stripe error creating checkout session")
     except Exception as e:
-        logger.error(f"Error creating checkout session: {str(e)}")
+        logger.error(f"Unexpected error creating checkout session: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to create checkout session")
 
 @app.get("/app", response_class=HTMLResponse)
