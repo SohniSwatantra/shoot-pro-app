@@ -12,6 +12,7 @@ import logging
 import httpx
 from typing import Optional
 
+
 app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key="your-secret-key")
 app.mount("/static", StaticFiles(directory="static"), name="static")
