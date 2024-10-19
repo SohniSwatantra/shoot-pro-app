@@ -59,6 +59,8 @@ class User(BaseModel):
     picture: str
     subscription_status: Optional[str] = None
 
+class CheckoutSessionRequest(BaseModel):
+    priceId: str
 # Helper function to get current user
 async def get_current_user(request: Request):
     user = request.session.get('user')
