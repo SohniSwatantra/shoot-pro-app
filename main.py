@@ -52,9 +52,11 @@ with get_db() as conn:
 
 # User model
 class User(BaseModel):
+    sub: str
     email: str
     name: str
-    subscription_status: str = None
+    picture: str
+    subscription_status: Optional[str] = None
 
 # Helper function to get current user
 async def get_current_user(request: Request):
