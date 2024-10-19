@@ -43,9 +43,10 @@ def get_db():
 with get_db() as conn:
     conn.execute('''
     CREATE TABLE IF NOT EXISTS users
-    (id INTEGER PRIMARY KEY AUTOINCREMENT,
+    (sub TEXT PRIMARY KEY,
      email TEXT UNIQUE NOT NULL,
      name TEXT,
+     picture TEXT,
      subscription_status TEXT)
     ''')
 
@@ -115,8 +116,8 @@ async def auth(request: Request):
         c.execute("SELECT * FROM users WHERE email = ?", (user_info.get('email'),))
         existing_user = c.fetchone()
         if not existing_user:
-            c.execute("INSERT INTO users (email, name) VALUES (?, ?)",
-                      (user_info.get('email'), user_info.get('name')))
+            c.execute("INSERT INTO users (sub, email, name) VALUES (?, ?, ?)",
+            (user_info.get('sub'), user_info.get('email'), user_info.get('name')))
             conn.commit()
     
     # Redirect the user to the payment page
