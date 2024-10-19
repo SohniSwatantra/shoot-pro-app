@@ -10,6 +10,7 @@ import sqlite3
 from pydantic import BaseModel
 import logging
 import httpx
+from typing import Optional
 
 app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key="your-secret-key")
