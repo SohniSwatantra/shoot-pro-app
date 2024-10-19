@@ -159,7 +159,7 @@ async def create_checkout_session(request: Request, user: User = Depends(get_cur
                 'quantity': 1,
             }],
             mode='subscription',
-            success_url=request.url_for('app'),
+            success_url=request.url_for('app_page'),
             cancel_url=request.url_for('payment'),
         )
         return {"id": checkout_session.id}
