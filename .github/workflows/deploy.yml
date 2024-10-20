@@ -8,6 +8,9 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      SERVER_IP: 188.245.197.185
+      SERVER_USER: root
 
     steps:
       - name: Checkout Code
@@ -16,11 +19,8 @@ jobs:
       - name: Set up SSH
         uses: webfactory/ssh-agent@v0.8.0
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY  }}
-
-      - name: Debug SSH key
-        run: ssh-keygen -l -f /dev/stdin <<< "${{ secrets.YOUR_SSH_PRIVATE_KEY }}"
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Deploy to Server
         run: |
-          ssh -o StrictHostKeyChecking=no root@188.245.197.185 "bash /var/www/Techshooting/shoot-pro-app/deploy.sh"
+          ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "bash /var/www/Techshooting/shoot-pro-app/deploy.sh"
