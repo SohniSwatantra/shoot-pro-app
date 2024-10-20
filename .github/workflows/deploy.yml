@@ -18,6 +18,9 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY  }}
 
+      - name: Debug SSH key
+        run: ssh-keygen -l -f /dev/stdin <<< "${{ secrets.YOUR_SSH_PRIVATE_KEY }}"
+
       - name: Deploy to Server
         run: |
           ssh -o StrictHostKeyChecking=no root@188.245.197.185 "bash /var/www/Techshooting/shoot-pro-app/deploy.sh"
