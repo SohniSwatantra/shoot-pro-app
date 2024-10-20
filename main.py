@@ -36,6 +36,7 @@ oauth.register(
 
 # Initialize Stripe
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
+stripe_webhook_secret = os.getenv('STRIPE_WEBHOOK_SECRET')
 
 # Database setup
 def get_db():
