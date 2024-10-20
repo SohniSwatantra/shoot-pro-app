@@ -11,7 +11,11 @@ from pydantic import BaseModel
 import logging
 import httpx
 from typing import Optional
+from dotenv import load_dotenv
 
+load_dotenv()
+
+stripe_webhook_secret = os.getenv('STRIPE_WEBHOOK_SECRET')
 
 app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key="your-secret-key")
@@ -239,19 +243,32 @@ async def stripe_webhook(request: Request):
             payload, sig_header, stripe_webhook_secret
         )
     except ValueError as e:
+        logger.error(f"Invalid payload: {str(e)}")
         raise HTTPException(status_code=400, detail="Invalid payload")
     except stripe.error.SignatureVerificationError as e:
+        logger.error(f"Invalid signature: {str(e)}")
         raise HTTPException(status_code=400, detail="Invalid signature")
 
+    # Handle the event
     if event['type'] == 'checkout.session.completed':
         session = event['data']['object']
-        customer_email = session['customer_details']['email']
+        customer_email = session.get('customer_details', {}).get('email')
         
-        # Update user's subscription status in the database
-        with get_db() as conn:
-            c = conn.cursor()
-            c.execute("UPDATE users SET subscription_status = 'active' WHERE email = ?", (customer_email,))
-            conn.commit()
+        if not customer_email:
+            logger.error("Customer email not found in the session data")
+            return {"status": "error", "message": "Customer email not found"}
+
+        try:
+            with get_db() as conn:
+                c = conn.cursor()
+                c.execute("UPDATE users SET subscription_status = 'active' WHERE email = ?", (customer_email,))
+                if c.rowcount == 0:
+                    logger.warning(f"No user found with email: {customer_email}")
+                conn.commit()
+            logger.info(f"Subscription activated for user: {customer_email}")
+        except Exception as e:
+            logger.error(f"Error updating subscription status: {str(e)}")
+            return {"status": "error", "message": "Database update failed"}
 
     return {"status": "success"}
 
