@@ -11,11 +11,9 @@ from pydantic import BaseModel
 import logging
 import httpx
 from typing import Optional
-from dotenv import load_dotenv
 
-load_dotenv()
 
-stripe_webhook_secret = os.getenv('STRIPE_WEBHOOK_SECRET')
+
 
 app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key="your-secret-key")
@@ -249,7 +247,6 @@ async def stripe_webhook(request: Request):
         logger.error(f"Invalid signature: {str(e)}")
         raise HTTPException(status_code=400, detail="Invalid signature")
 
-    # Handle the event
     if event['type'] == 'checkout.session.completed':
         session = event['data']['object']
         customer_email = session.get('customer_details', {}).get('email')
