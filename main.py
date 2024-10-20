@@ -221,14 +221,25 @@ async def get_profile(user: User = Depends(get_current_user)):
     return user
 
 @app.post("/profile")
-async def update_profile(profile: User, current_user: User = Depends(get_current_user)):
+async def update_profile(
+    name: str,
+    club: str,
+    coach: str,
+    discipline: str,
+    personal_best: int,
+    current_user: User = Depends(get_current_user)
+):
     if not current_user:
         raise HTTPException(status_code=401, detail="User not authenticated")
     
     with get_db() as conn:
         c = conn.cursor()
-        c.execute("UPDATE users SET name = ? WHERE email = ?",
-                  (profile.name, current_user.email))
+        c.execute("""
+            UPDATE users 
+            SET name = ?, club = ?, coach = ?, discipline = ?, personal_best = ? 
+            WHERE email = ?
+        """, (name, club, coach, discipline, personal_best, current_user.email))
+        conn.commit()
     
     return {"message": "Profile updated successfully"}
 
