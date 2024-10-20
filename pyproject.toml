@@ -2,8 +2,7 @@
 name = "repl-nix-shootproapp"
 version = "0.1.0"
 description = ""
-authors = ["Your Name <you@example.com>"]
-readme = "README.md"
+authors = ["Techshooting.com"]
 
 [tool.poetry.dependencies]
 python = "^3.11"
