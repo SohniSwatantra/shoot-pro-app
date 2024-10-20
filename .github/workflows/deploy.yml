@@ -10,14 +10,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-    - name: Set up SSH
-      uses: webfactory/ssh-agent@v0.7.0
-      with:
-        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC8VkgSGkpvYX0kwM74Ktx3cOp7clykfSSRJUfNYaP/9gRW2YwZ6Gn2qQj3tHPuWOPdWDe4SYSe7B+37TZ2vgeIaEkgZrb0dqSOHZKZXdpv2b95FGbgh7qiY2/WOxW0CqVXBuGDzKA4mizyZQ8c2NJAq2WagSjEqLPcW6SWLYrWHX6EUXWAQn7Jp6o80MBhR0XW/RAmwl+vw9HwwRL0/ML7jvTAoOtJoxRi1JoSn0pC8yPOsUW0cUiZTWZvuut/eeaAGkCy54wLl3IBWIc+HFvo5WZIAgtGCCbi0+Jnu2u7Mz+Oei+dFMsDruvN2kbUqy0ycSChiHYF5Qu8jhETXjoiolqpt6bajO/x5lKyurrOpkmDunqM26aI8vuAwf4K8FQWGPHhw+AP75cNv4+gr8kO57xISXcG0gYl9+D61Ae/oEAGIOPztccnl/RXfEYfA9pa7ob6MuQV/PkgXU6BylyohCW4V7rSjr1zEqCsRuJZr17qtXOeZu9XBr0TxCTafL9Oa6Lr6Wt8wlKbJ7VXeTQ0DYMh49GfKmTaXav5E/SDPQOwQ8dCQhPvLOGxDY91eIUMLLCnEng/hMePU8AxRg23wxlm76sq6azE/Zuh5xn7/eXkLJmiEIpKNcE/sqosP117ki6/9UJ+jWKDhad05Dh37UgBJ+baTQfDpT7RdATLVQ== github-actions}}
 
-    - name: Deploy to Server
-      run: |
-        ssh -o StrictHostKeyChecking=no root@188.245.197.185 "bash /var/www/Techshooting/shoot-pro-app/deploy.sh"
+      - name: Deploy to Server
+        run: |
+          ssh -o StrictHostKeyChecking=no root@188.245.197.185 "bash /var/www/Techshooting/shoot-pro-app/deploy.sh"
