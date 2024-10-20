@@ -229,6 +229,32 @@ async def update_profile(profile: User, current_user: User = Depends(get_current
     
     return {"message": "Profile updated successfully"}
 
+@app.post("/stripe-webhook")
+async def stripe_webhook(request: Request):
+    payload = await request.body()
+    sig_header = request.headers.get('stripe-signature')
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, stripe_webhook_secret
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail="Invalid payload")
+    except stripe.error.SignatureVerificationError as e:
+        raise HTTPException(status_code=400, detail="Invalid signature")
+
+    if event['type'] == 'checkout.session.completed':
+        session = event['data']['object']
+        customer_email = session['customer_details']['email']
+        
+        # Update user's subscription status in the database
+        with get_db() as conn:
+            c = conn.cursor()
+            c.execute("UPDATE users SET subscription_status = 'active' WHERE email = ?", (customer_email,))
+            conn.commit()
+
+    return {"status": "success"}
+
 if __name__ == '__main__':
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
