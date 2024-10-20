@@ -13,6 +13,7 @@ import httpx
 from typing import Optional
 from dotenv import load_dotenv
 
+load_dotenv()
 
 stripe_webhook_secret = os.getenv('STRIPE_WEBHOOK_SECRET')
 
