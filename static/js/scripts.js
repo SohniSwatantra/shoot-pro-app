@@ -27,7 +27,7 @@ document.getElementById('profile-form').addEventListener('submit', async (e) => 
         club: document.getElementById('club').value,
         coach: document.getElementById('coach').value,
         discipline: document.getElementById('discipline').value,
-        personal_best: parseInt(document.getElementById('personal_best').value)
+        personal_best: parseInt(document.getElementById('personal_best').value, 10)
     };
 
     try {
@@ -45,7 +45,7 @@ document.getElementById('profile-form').addEventListener('submit', async (e) => 
             document.getElementById('profile-form').style.display = 'none';
         } else {
             const errorData = await response.json();
-            alert(`Error updating profile: ${errorData.detail}`);
+            alert(`Error updating profile: ${JSON.stringify(errorData.detail)}`);
         }
     } catch (error) {
         console.error('Error:', error);

@@ -65,6 +65,14 @@ class User(BaseModel):
 
 class CheckoutSessionRequest(BaseModel):
     priceId: str
+
+class ProfileUpdate(BaseModel):
+    name: str
+    club: str
+    coach: str
+    discipline: str
+    personal_best: int
+
 # Helper function to get current user
 async def get_current_user(request: Request):
     user = request.session.get('user')
@@ -220,15 +228,16 @@ async def get_profile(user: User = Depends(get_current_user)):
         raise HTTPException(status_code=401, detail="User not authenticated")
     return user
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 @app.post("/profile")
 async def update_profile(
-    name: str,
-    club: str,
-    coach: str,
-    discipline: str,
-    personal_best: int,
+    profile: ProfileUpdate,
     current_user: User = Depends(get_current_user)
 ):
+    logger.info(f"Received profile update: {profile}")
+
     if not current_user:
         raise HTTPException(status_code=401, detail="User not authenticated")
     
@@ -238,7 +247,7 @@ async def update_profile(
             UPDATE users 
             SET name = ?, club = ?, coach = ?, discipline = ?, personal_best = ? 
             WHERE email = ?
-        """, (name, club, coach, discipline, personal_best, current_user.email))
+        """, (profile.name, profile.club, profile.coach, profile.discipline, profile.personal_best, current_user.email))
         conn.commit()
     
     return {"message": "Profile updated successfully"}
