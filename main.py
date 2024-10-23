@@ -52,7 +52,11 @@ with get_db() as conn:
      email TEXT UNIQUE NOT NULL,
      name TEXT,
      picture TEXT,
-     subscription_status TEXT)
+     subscription_status TEXT,
+     club TEXT,
+     coach TEXT,
+     discipline TEXT,
+     personal_best INTEGER)
     ''')
 
 # User model
@@ -62,6 +66,10 @@ class User(BaseModel):
     name: str
     picture: str
     subscription_status: Optional[str] = None
+    club: Optional[str] = None
+    coach: Optional[str] = None
+    discipline: Optional[str] = None
+    personal_best: Optional[int] = None
 
 class CheckoutSessionRequest(BaseModel):
     priceId: str
