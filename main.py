@@ -236,29 +236,20 @@ async def get_profile(user: User = Depends(get_current_user)):
         raise HTTPException(status_code=401, detail="User not authenticated")
     return user
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
 @app.post("/profile")
-async def update_profile(
-    profile: ProfileUpdate,
-    current_user: User = Depends(get_current_user)
-):
-    logger.info(f"Received profile update: {profile}")
-
-    if not current_user:
-        raise HTTPException(status_code=401, detail="User not authenticated")
-    
+async def update_profile(profile: ProfileUpdate, user: User = Depends(get_current_user)):
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+        
     with get_db() as conn:
         c = conn.cursor()
         c.execute("""
             UPDATE users 
-            SET name = ?, club = ?, coach = ?, discipline = ?, personal_best = ? 
-            WHERE email = ?
-        """, (profile.name, profile.club, profile.coach, profile.discipline, profile.personal_best, current_user.email))
-        conn.commit()
-    
-    return {"message": "Profile updated successfully"}
+            SET name = ?, club = ?, coach = ?, discipline = ?, personal_best = ?
+            WHERE sub = ?
+        """, (profile.name, profile.club, profile.coach, profile.discipline, profile.personal_best, user.sub))
+        
+    return {"status": "success"}
 
 @app.post("/stripe-webhook")
 async def stripe_webhook(request: Request):
