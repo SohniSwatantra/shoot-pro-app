@@ -170,9 +170,21 @@ async def subscription_details(request: Request, user: User = Depends(get_curren
         return RedirectResponse(url='/signin')
     
     try:
-        # Get subscription details from Stripe
+        # First get the customer ID using the email
+        customers = stripe.Customer.list(
+            email=user.email,
+            limit=1
+        )
+        
+        if not customers.data:
+            logger.warning(f'No customer found for user {user.email}')
+            return RedirectResponse(url='/payment')
+            
+        customer = customers.data[0]
+        
+        # Then get subscriptions for this customer
         subscriptions = stripe.Subscription.list(
-            customer_email=user.email,
+            customer=customer.id,
             limit=1,
             status='active'
         )
@@ -251,9 +263,21 @@ async def app_page(request: Request, user: User = Depends(get_current_user)):
         return RedirectResponse(url='/signin')
     
     try:
-        # Check subscription status in Stripe
+        # First get the customer ID using the email
+        customers = stripe.Customer.list(
+            email=user.email,
+            limit=1
+        )
+        
+        if not customers.data:
+            logger.warning(f'No customer found for user {user.email}')
+            return RedirectResponse(url='/payment')
+            
+        customer = customers.data[0]
+        
+        # Then get subscriptions for this customer
         subscriptions = stripe.Subscription.list(
-            customer_email=user.email,
+            customer=customer.id,
             limit=1,
             status='active'
         )
