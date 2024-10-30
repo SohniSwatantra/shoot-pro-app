@@ -11,6 +11,7 @@ from pydantic import BaseModel
 import logging
 import httpx
 from typing import Optional
+from datetime import datetime
 
 app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key="your-secret-key")
@@ -367,6 +368,13 @@ async def stripe_webhook(request: Request):
             return {"status": "error", "message": "Database update failed"}
 
     return {"status": "success"}
+
+# Add this after your templates initialization
+def timestamp_to_date(timestamp):
+    return datetime.fromtimestamp(timestamp).strftime('%B %d, %Y')
+
+# Add the filter to Jinja2
+templates.env.filters["timestamp_to_date"] = timestamp_to_date
 
 if __name__ == '__main__':
     import uvicorn

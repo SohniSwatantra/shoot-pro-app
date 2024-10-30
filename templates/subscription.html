@@ -24,7 +24,7 @@
                 <div class="col-md-6">
                     <h4>Billing Information</h4>
                     <p><strong>Next Payment Date:</strong> 
-                        {{ subscription.current_period_end|datetime }}
+                        {{ subscription.current_period_end|timestamp_to_date }}
                     </p>
                 </div>
             </div>
