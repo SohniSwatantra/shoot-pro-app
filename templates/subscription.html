@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <nav class="nav nav-tabs mb-4">
+        <a class="nav-link" href="/app">Profile</a>
+        <a class="nav-link active" href="/subscription">Subscription Details</a>
+    </nav>
+
+    <div class="card">
+        <div class="card-header">
+            <h2>Your Subscription Details</h2>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>Current Plan</h4>
+                    <p><strong>Plan Name:</strong> {{ subscription.plan_name }}</p>
+                    <p><strong>Status:</strong> 
+                        <span class="badge bg-success">{{ subscription.status }}</span>
+                    </p>
+                    <p><strong>Billing Period:</strong> {{ subscription.interval }}</p>
+                    <p><strong>Amount:</strong> {{ subscription.amount }} {{ subscription.currency|upper }}</p>
+                </div>
+                <div class="col-md-6">
+                    <h4>Billing Information</h4>
+                    <p><strong>Next Payment Date:</strong> 
+                        {{ subscription.current_period_end|datetime }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer">
+            <small class="text-muted">
+                For billing issues or questions about your subscription, please contact support.
+            </small>
+        </div>
+    </div>
+</div>
+{% endblock %}

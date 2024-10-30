@@ -1,48 +1,74 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shooting Sports App</title>
-    <link rel="stylesheet" href="/static/css/styles.css">
-</head>
-<body>
-    <header>
-        <nav>
-            <ul>
-                <li><a href="/">Home</a></li>
-                <li><a href="/logout">Logout</a></li>
-            </ul>
-        </nav>
-    </header>
-    <main>
-        <h1>Welcome to Your Shooting Sports Dashboard</h1>
-        <div id="profile-section">
-            <h2>Your Profile</h2>
-            <div id="profile-display"></div>
-            <button onclick="editProfile()">Edit Profile</button>
-            <form id="profile-form" style="display: none;">
-                <label for="name">Name:</label>
-                <input type="text" id="name" name="name" required>
-                <label for="club">Shooting Club:</label>
-                <input type="text" id="club" name="club" required>
-                <label for="coach">Coach:</label>
-                <input type="text" id="coach" name="coach" required>
-                <label for="discipline">Discipline:</label>
-                <select id="discipline" name="discipline" required>
-                    <option value="Rifle">Rifle</option>
-                    <option value="Pistol">Pistol</option>
-                    <option value="Shotgun">Shotgun</option>
-                </select>
-                <label for="personal_best">Personal Best:</label>
-                <input type="number" id="personal_best" name="personal_best" required>
-                <button type="submit">Update Profile</button>
-            </form>
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <!-- NEW: Added navigation tabs -->
+    <nav class="nav nav-tabs mb-4">
+        <a class="nav-link active" href="/app">Profile</a>
+        <a class="nav-link" href="/subscription">Subscription Details</a>
+    </nav>
+
+    <h2>Your Profile</h2>
+    <div id="profile-form">
+        <div class="mb-3">
+            <label for="name" class="form-label">Name</label>
+            <input type="text" class="form-control" id="name" value="{{ user.name }}">
         </div>
-    </main>
-    <footer>
-        <p>&copy; 2023 Shooting Sports Enthusiasts. All rights reserved.</p>
-    </footer>
-    <script src="/static/js/scripts.js"></script>
-</body>
-</html>
+        <div class="mb-3">
+            <label for="club" class="form-label">Club</label>
+            <input type="text" class="form-control" id="club">
+        </div>
+        <div class="mb-3">
+            <label for="coach" class="form-label">Coach</label>
+            <input type="text" class="form-control" id="coach">
+        </div>
+        <div class="mb-3">
+            <label for="discipline" class="form-label">Discipline</label>
+            <input type="text" class="form-control" id="discipline">
+        </div>
+        <div class="mb-3">
+            <label for="personal_best" class="form-label">Personal Best</label>
+            <input type="number" class="form-control" id="personal_best">
+        </div>
+        <button onclick="saveProfile()" class="btn btn-primary">Save Profile</button>
+    </div>
+</div>
+
+<script>
+// Your existing JavaScript for profile management
+async function loadProfile() {
+    const response = await fetch('/profile');
+    const data = await response.json();
+    document.getElementById('name').value = data.name || '';
+    document.getElementById('club').value = data.club || '';
+    document.getElementById('coach').value = data.coach || '';
+    document.getElementById('discipline').value = data.discipline || '';
+    document.getElementById('personal_best').value = data.personal_best || '';
+}
+
+async function saveProfile() {
+    const profile = {
+        name: document.getElementById('name').value,
+        club: document.getElementById('club').value,
+        coach: document.getElementById('coach').value,
+        discipline: document.getElementById('discipline').value,
+        personal_best: parseInt(document.getElementById('personal_best').value) || 0
+    };
+
+    const response = await fetch('/profile', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(profile)
+    });
+
+    if (response.ok) {
+        alert('Profile updated successfully!');
+    } else {
+        alert('Error updating profile');
+    }
+}
+
+loadProfile();
+</script>
+{% endblock %}

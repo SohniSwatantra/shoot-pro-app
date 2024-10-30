@@ -12,9 +12,6 @@ import logging
 import httpx
 from typing import Optional
 
-
-
-
 app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key="your-secret-key")
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -104,7 +101,6 @@ async def login(request: Request):
     redirect_uri = request.url_for('auth')
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
-
 @app.get('/auth')
 async def auth(request: Request):
     try:
@@ -135,7 +131,7 @@ async def auth(request: Request):
     
     request.session['user'] = user_info
     
-    # Check if user exists in the database, if not, add them
+    # Check if user exists and their subscription status
     with get_db() as conn:
         c = conn.cursor()
         c.execute("SELECT * FROM users WHERE email = ?", (user_info.get('email'),))
@@ -144,8 +140,13 @@ async def auth(request: Request):
             c.execute("INSERT INTO users (sub, email, name) VALUES (?, ?, ?)",
             (user_info.get('sub'), user_info.get('email'), user_info.get('name')))
             conn.commit()
+        else:
+            c.execute("SELECT subscription_status FROM users WHERE email = ?", (user_info.get('email'),))
+            user_sub = c.fetchone()
+            if user_sub and user_sub[0] == 'active':
+                return RedirectResponse(url='/app')
     
-    # Redirect the user to the payment page
+    # If no active subscription, redirect to payment
     return RedirectResponse(url='/payment')
 
 @app.get('/logout')
@@ -162,6 +163,42 @@ async def payment(request: Request, user: User = Depends(get_current_user)):
         "STRIPE_MONTHLY_PRICE_ID": os.getenv('STRIPE_MONTHLY_PRICE_ID'),
         "STRIPE_YEARLY_PRICE_ID": os.getenv('STRIPE_YEARLY_PRICE_ID')
     })
+
+@app.get("/subscription", response_class=HTMLResponse)
+async def subscription_details(request: Request, user: User = Depends(get_current_user)):
+    if not user:
+        return RedirectResponse(url='/signin')
+    
+    try:
+        # Get subscription details from Stripe
+        subscriptions = stripe.Subscription.list(
+            customer_email=user.email,
+            limit=1,
+            status='active'
+        )
+        
+        if not subscriptions.data:
+            logger.warning(f"No active subscription found for user {user.email}")
+            return RedirectResponse(url='/payment')
+            
+        subscription = subscriptions.data[0]
+        
+        subscription_data = {
+            'plan_name': subscription.plan.nickname,
+            'status': subscription.status,
+            'current_period_end': subscription.current_period_end,
+            'amount': subscription.plan.amount / 100,  # Convert cents to dollars
+            'currency': subscription.plan.currency,
+            'interval': subscription.plan.interval
+        }
+        
+        return templates.TemplateResponse(
+            "subscription.html", 
+            {"request": request, "user": user, "subscription": subscription_data}
+        )
+    except stripe.error.StripeError as e:
+        logger.error(f"Stripe error fetching subscription: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error fetching subscription details")
 
 @app.post("/create-checkout-session")
 async def create_checkout_session(
@@ -187,10 +224,6 @@ async def create_checkout_session(
     success_url = f"{base_url}/app?session_id={{CHECKOUT_SESSION_ID}}"
     cancel_url = f"{base_url}/payment"
     
-    logger.info(f"Creating checkout session for user: {user.email} with price_id: {price_id}")
-    logger.info(f"Success URL: {success_url}")
-    logger.info(f"Cancel URL: {cancel_url}")
-    
     try:
         checkout_session = stripe.checkout.Session.create(
             client_reference_id=user.email,
@@ -204,7 +237,6 @@ async def create_checkout_session(
             success_url=success_url,
             cancel_url=cancel_url,
         )
-        logger.info(f"Checkout session created successfully: {checkout_session.id}")
         return {"id": checkout_session.id}
     except stripe.error.StripeError as e:
         logger.error(f"Stripe error creating checkout session: {str(e)}", exc_info=True)
@@ -218,18 +250,22 @@ async def app_page(request: Request, user: User = Depends(get_current_user)):
     if not user:
         return RedirectResponse(url='/signin')
     
-    # Check subscription status
-    with get_db() as conn:
-        c = conn.cursor()
-        c.execute("SELECT subscription_status FROM users WHERE email = ?", (user.email,))
-        subscription = c.fetchone()
-    
-    if not subscription or subscription[0] not in ['active', 'trialing']:
-        logger.warning(f'User {user.email} attempted to access app without active subscription')
-        return RedirectResponse(url='/payment')
-    
-    return templates.TemplateResponse("app.html", {"request": request, "user": user})
-
+    try:
+        # Check subscription status in Stripe
+        subscriptions = stripe.Subscription.list(
+            customer_email=user.email,
+            limit=1,
+            status='active'
+        )
+        
+        if not subscriptions.data:
+            logger.warning(f'User {user.email} has no active subscription')
+            return RedirectResponse(url='/payment')
+        
+        return templates.TemplateResponse("app.html", {"request": request, "user": user})
+    except stripe.error.StripeError as e:
+        logger.error(f"Stripe error checking subscription: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error checking subscription status")
 
 @app.get("/profile")
 async def get_profile(user: User = Depends(get_current_user)):
