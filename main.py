@@ -53,10 +53,10 @@ with get_db() as conn:
      name TEXT,
      picture TEXT,
      subscription_status TEXT,
-     club TEXT,
-     coach TEXT,
-     discipline TEXT,
-     personal_best INTEGER)
+     club TEXT DEFAULT NULL,
+     coach TEXT DEFAULT NULL,
+     discipline TEXT DEFAULT NULL,
+     personal_best INTEGER DEFAULT NULL)
     ''')
 
 # User model
@@ -229,6 +229,7 @@ async def app_page(request: Request, user: User = Depends(get_current_user)):
         return RedirectResponse(url='/payment')
     
     return templates.TemplateResponse("app.html", {"request": request, "user": user})
+
 
 @app.get("/profile")
 async def get_profile(user: User = Depends(get_current_user)):
