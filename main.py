@@ -235,7 +235,25 @@ async def app_page(request: Request, user: User = Depends(get_current_user)):
 async def get_profile(user: User = Depends(get_current_user)):
     if not user:
         raise HTTPException(status_code=401, detail="User not authenticated")
-    return user
+    
+    with get_db() as conn:
+        c = conn.cursor()
+        c.execute("""
+            SELECT name, club, coach, discipline, personal_best 
+            FROM users 
+            WHERE email = ?
+        """, (user.email,))
+        result = c.fetchone()
+        
+    if result:
+        return {
+            "name": result[0],
+            "club": result[1],
+            "coach": result[2],
+            "discipline": result[3],
+            "personal_best": result[4]
+        }
+    return {}
 
 @app.post("/profile")
 async def update_profile(profile: ProfileUpdate, user: User = Depends(get_current_user)):
